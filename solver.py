@@ -2,24 +2,31 @@ from random import randint as rand
 
 class Board:
 
-    def __init__(self, number=1):
-        self.board = [[0 for i in range(9)] for j in range(9)]
-        self.fill_board(number)
+    def __init__(self, board=False):
+        self.board = ([[0 for i in range(9)] for j in range(9)] if not board else board)
+        
+        if not board:
+            self.fill_board()
 
-    # Fills board with a specified amount of non-zero numbers if legal
-    # Avoid setting number too high as this will create lots of cases where the number is illegal
-    def fill_board(self, number):        
-        for pos in range(number):
-            while True:
-                i = rand(0,8)
-                j = rand(0,8)
 
-                if self.board[i][j] == 0:
-                    num = rand(1,9)
-                    if self.is_legal(num, i, j):
+    # Lets user fill board up row by row, checking if it is valid at each step
+    def fill_board(self):
+        print("Fill the board by typing in numbers 1-9 in spaces of your choice!")       
+        for i in range(9):
+            self.print_board()
+            for j in range(9):
+                while True:
+                    try:
+                        num = int(input(f'Input the next number in the row (element {j}) : '))
+                        if num < 1 or num > 9:
+                            raise ValueError
+                    except:
+                        print('Please enter a number between 1 and 9')
+
+                    if self.is_legal(num, i, j) or num == 0:
                         self.board[i][j] = num
                         break
-    
+
     def is_legal(self, number, row, column):
         
         #check row
@@ -43,7 +50,8 @@ class Board:
         
         return True
 
-    def print_board(self):
+    def print_board(self, initial=False):
+        
         for ind, row in enumerate(self.board):
             if ind % 3 == 0 and ind != 0:
                 print("-----------------------")
@@ -54,7 +62,49 @@ class Board:
                     print(f' {row[i]}')
                 else:
                     print(f' {row[i]}', end="")
-            
     
-sudoku = Board(number=20)
-sudoku.print_board()
+    def solve(self):
+        try:
+            i, j = self.find_empty()
+        except TypeError:
+            return True
+
+        for num in range(1, 10):
+            if self.is_legal(num, i, j):
+                self.board[i][j] = num
+                if self.solve():
+                    return True
+            self.board[i][j] = 0
+        
+        return False
+        
+    
+    def find_empty(self):
+        for i in range(9):
+            for j in range(9):
+                if self.board[i][j] == 0:
+                    return i, j
+
+        return False
+
+
+if __name__ == '__main__':
+
+    board = [
+        [0,0,0,2,6,0,7,0,1],
+        [6,8,0,0,7,0,0,9,0],
+        [1,9,0,0,0,4,5,0,0],
+        [8,2,0,1,0,0,0,4,0],
+        [0,0,4,6,0,2,9,0,0],
+        [0,5,0,0,0,3,0,2,8],
+        [0,0,9,3,0,0,0,7,4],
+        [0,4,0,0,5,0,0,3,6],
+        [7,0,3,0,1,8,0,0,0]
+    ]
+    sudoku = Board(board)
+    print('Initial Board is : \n')
+    sudoku.print_board()
+    sudoku.solve()
+    print('')
+    print('Solved board is : \n')
+    sudoku.print_board()
